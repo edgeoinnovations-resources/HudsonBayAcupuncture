@@ -359,11 +359,16 @@ def create_3d_map(municipalities_gdf, selected_counties, selected_tiers, selecte
         map_data.append({
             'polygon': coords,
             'name': row['NAME'],
+            'type': row['TYPE'].title(),
             'county': row['COUNTY'],
-            'population': int(row['POPULATION']),
-            'median_income': int(row['MEDIAN_INCOME']),
+            'population': f"{int(row['POPULATION']):,}",
+            'median_income': f"${int(row['MEDIAN_INCOME']):,}",
+            'acup_index': round(row['ACUP_INDEX'], 1),
+            'market_size': f"{int(row['MARKET_SIZE']):,}",
             'opportunity_score': round(row['OPPORTUNITY_SCORE'], 1),
+            'opportunity_rank': int(row['OPPORTUNITY_RANK']),
             'market_tier': row['MARKET_TIER'],
+            'lifemode': row['LIFEMODE'],
             'elevation': elevation,
             'color': color
         })
@@ -404,13 +409,20 @@ def create_3d_map(municipalities_gdf, selected_counties, selected_tiers, selecte
         initial_view_state=view_state,
         tooltip={
             'html': '''
-                <div style="font-family: Arial; padding: 10px; background: white; border-radius: 8px; color: #333;">
-                    <b style="font-size: 16px; color: #1E3A5F;">{name}</b><br/>
-                    <b>County:</b> {county}<br/>
-                    <b>Population:</b> {population:,}<br/>
-                    <b>Median Income:</b> ${median_income:,}<br/>
-                    <b>Opportunity Score:</b> <span style="font-weight: bold; font-size: 14px;">{opportunity_score}</span><br/>
-                    <b>Market Tier:</b> {market_tier}
+                <div style="font-family: Arial; padding: 12px; background: white; border-radius: 8px; color: #333; min-width: 250px;">
+                    <div style="font-size: 18px; font-weight: bold; color: #1E3A5F; border-bottom: 2px solid #667eea; padding-bottom: 8px; margin-bottom: 8px;">{name}</div>
+                    <table style="width: 100%; font-size: 13px;">
+                        <tr><td style="padding: 3px 0;"><b>Type:</b></td><td>{type}</td></tr>
+                        <tr><td style="padding: 3px 0;"><b>County:</b></td><td>{county}</td></tr>
+                        <tr><td style="padding: 3px 0;"><b>Population:</b></td><td>{population}</td></tr>
+                        <tr><td style="padding: 3px 0;"><b>Median Income:</b></td><td>{median_income}</td></tr>
+                        <tr style="background: #f5f5f5;"><td style="padding: 6px 0;"><b>Opportunity Score:</b></td><td style="font-size: 16px; font-weight: bold;">{opportunity_score}</td></tr>
+                        <tr><td style="padding: 3px 0;"><b>Opportunity Rank:</b></td><td>#{opportunity_rank}</td></tr>
+                        <tr><td style="padding: 3px 0;"><b>Market Index:</b></td><td>{acup_index}</td></tr>
+                        <tr><td style="padding: 3px 0;"><b>Market Size:</b></td><td>{market_size}</td></tr>
+                        <tr><td style="padding: 3px 0;"><b>Market Tier:</b></td><td>{market_tier}</td></tr>
+                        <tr><td style="padding: 3px 0;"><b>LifeMode:</b></td><td>{lifemode}</td></tr>
+                    </table>
                 </div>
             ''',
             'style': {
