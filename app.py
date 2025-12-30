@@ -276,24 +276,24 @@ def create_interactive_map(municipalities_gdf, counties_gdf, selected_counties, 
     # Add legend
     legend_html = """
     <div style="position: fixed; bottom: 50px; left: 50px; z-index: 1000;
-                background-color: white; padding: 15px; border-radius: 8px;
+                background-color: #ffffff !important; padding: 15px; border-radius: 8px;
                 box-shadow: 0 2px 6px rgba(0,0,0,0.3); font-family: Arial, sans-serif;">
-        <h4 style="margin: 0 0 10px 0; font-size: 14px; color: #333;">Market Tiers</h4>
+        <h4 style="margin: 0 0 10px 0; font-size: 14px; color: #1a1a1a !important;">Market Tiers</h4>
         <div style="display: flex; align-items: center; margin: 5px 0;">
             <span style="background: #2E7D32; width: 20px; height: 20px; display: inline-block; margin-right: 8px; border-radius: 3px;"></span>
-            <span style="font-size: 12px; color: #333;">Tier 1 - Prime (70+)</span>
+            <span style="font-size: 12px; color: #1a1a1a !important;">Tier 1 - Prime (70+)</span>
         </div>
         <div style="display: flex; align-items: center; margin: 5px 0;">
             <span style="background: #1976D2; width: 20px; height: 20px; display: inline-block; margin-right: 8px; border-radius: 3px;"></span>
-            <span style="font-size: 12px; color: #333;">Tier 2 - Strong (50-69)</span>
+            <span style="font-size: 12px; color: #1a1a1a !important;">Tier 2 - Strong (50-69)</span>
         </div>
         <div style="display: flex; align-items: center; margin: 5px 0;">
             <span style="background: #F57C00; width: 20px; height: 20px; display: inline-block; margin-right: 8px; border-radius: 3px;"></span>
-            <span style="font-size: 12px; color: #333;">Tier 3 - Moderate (30-49)</span>
+            <span style="font-size: 12px; color: #1a1a1a !important;">Tier 3 - Moderate (30-49)</span>
         </div>
         <div style="display: flex; align-items: center; margin: 5px 0;">
             <span style="background: #757575; width: 20px; height: 20px; display: inline-block; margin-right: 8px; border-radius: 3px;"></span>
-            <span style="font-size: 12px; color: #333;">Tier 4 - Low (&lt;30)</span>
+            <span style="font-size: 12px; color: #1a1a1a !important;">Tier 4 - Low (&lt;30)</span>
         </div>
     </div>
     """
@@ -515,9 +515,9 @@ def main():
                 for _, row in top5.iterrows():
                     tier_color = get_tier_color(row['MARKET_TIER'])
                     st.markdown(f"""
-                    <div style="padding: 8px; margin: 4px 0; background: #f8f9fa; border-radius: 6px; border-left: 4px solid {tier_color};">
-                        <strong style="color: #333;">{row['NAME']}</strong><br>
-                        <span style="color: {tier_color}; font-weight: bold;">{row['OPPORTUNITY_SCORE']:.1f}</span>
+                    <div style="padding: 8px; margin: 4px 0; background: #f8f9fa !important; border-radius: 6px; border-left: 4px solid {tier_color};">
+                        <strong style="color: #1a1a1a !important;">{row['NAME']}</strong><br>
+                        <span style="color: {tier_color} !important; font-weight: bold;">{row['OPPORTUNITY_SCORE']:.1f}</span>
                     </div>
                     """, unsafe_allow_html=True)
             
