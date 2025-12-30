@@ -47,9 +47,9 @@ st.markdown("""
         text-align: center;
     }
     .tier-1 { background-color: #2E7D32; color: white; padding: 4px 12px; border-radius: 20px; }
-    .tier-2 { background-color: #1976D2; color: white; padding: 4px 12px; border-radius: 20px; }
+    .tier-2 { background-color: #FFD600; color: #333; padding: 4px 12px; border-radius: 20px; }
     .tier-3 { background-color: #F57C00; color: white; padding: 4px 12px; border-radius: 20px; }
-    .tier-4 { background-color: #757575; color: white; padding: 4px 12px; border-radius: 20px; }
+    .tier-4 { background-color: #D32F2F; color: white; padding: 4px 12px; border-radius: 20px; }
     .stTabs [data-baseweb="tab-list"] {
         gap: 8px;
     }
@@ -94,11 +94,11 @@ def get_tier_color(tier):
     """Return color for market tier."""
     colors = {
         "Tier 1 - Prime": "#2E7D32",      # Green
-        "Tier 2 - Strong": "#1976D2",      # Blue
+        "Tier 2 - Strong": "#FFD600",      # Yellow
         "Tier 3 - Moderate": "#F57C00",    # Orange
-        "Tier 4 - Low": "#757575"          # Gray
+        "Tier 4 - Low": "#D32F2F"          # Red
     }
-    return colors.get(tier, "#757575")
+    return colors.get(tier, "#D32F2F")
 
 def get_opportunity_color(score):
     """Return color based on opportunity score."""
@@ -347,11 +347,11 @@ def create_3d_map(municipalities_gdf, selected_counties, selected_tiers, selecte
         # Get color based on tier
         tier_colors = {
             "Tier 1 - Prime": [46, 125, 50, 200],      # Green
-            "Tier 2 - Strong": [25, 118, 210, 200],    # Blue
+            "Tier 2 - Strong": [255, 214, 0, 200],     # Yellow
             "Tier 3 - Moderate": [245, 124, 0, 200],   # Orange
-            "Tier 4 - Low": [117, 117, 117, 200]       # Gray
+            "Tier 4 - Low": [211, 47, 47, 200]         # Red
         }
-        color = tier_colors.get(row['MARKET_TIER'], [117, 117, 117, 200])
+        color = tier_colors.get(row['MARKET_TIER'], [211, 47, 47, 200])
 
         # Extrusion height based on opportunity score (scaled for visibility)
         elevation = row['OPPORTUNITY_SCORE'] * 500  # Scale factor for visibility
@@ -431,20 +431,20 @@ def create_tier_distribution_chart(df):
     """Create a donut chart showing tier distribution."""
     tier_counts = df['MARKET_TIER'].value_counts().reset_index()
     tier_counts.columns = ['Tier', 'Count']
-    
-    colors = ['#2E7D32', '#1976D2', '#F57C00', '#757575']
-    
+
+    colors = ['#2E7D32', '#FFD600', '#F57C00', '#D32F2F']
+
     fig = px.pie(
-        tier_counts, 
-        values='Count', 
+        tier_counts,
+        values='Count',
         names='Tier',
         hole=0.4,
         color='Tier',
         color_discrete_map={
             'Tier 1 - Prime': '#2E7D32',
-            'Tier 2 - Strong': '#1976D2',
+            'Tier 2 - Strong': '#FFD600',
             'Tier 3 - Moderate': '#F57C00',
-            'Tier 4 - Low': '#757575'
+            'Tier 4 - Low': '#D32F2F'
         }
     )
     fig.update_layout(
@@ -492,9 +492,9 @@ def create_scatter_plot(df):
         hover_data=['COUNTY', 'MEDIAN_INCOME', 'ACUP_INDEX'],
         color_discrete_map={
             'Tier 1 - Prime': '#2E7D32',
-            'Tier 2 - Strong': '#1976D2',
+            'Tier 2 - Strong': '#FFD600',
             'Tier 3 - Moderate': '#F57C00',
-            'Tier 4 - Low': '#757575'
+            'Tier 4 - Low': '#D32F2F'
         },
         labels={
             'POPULATION': 'Population',
@@ -514,7 +514,7 @@ def create_top_opportunities_chart(df, n=15):
     """Create horizontal bar chart of top opportunities."""
     top_n = df.nsmallest(n, 'OPPORTUNITY_RANK')
     top_n = top_n.sort_values('OPPORTUNITY_SCORE', ascending=True)
-    
+
     fig = px.bar(
         top_n,
         y='NAME',
@@ -523,9 +523,9 @@ def create_top_opportunities_chart(df, n=15):
         color='MARKET_TIER',
         color_discrete_map={
             'Tier 1 - Prime': '#2E7D32',
-            'Tier 2 - Strong': '#1976D2',
+            'Tier 2 - Strong': '#FFD600',
             'Tier 3 - Moderate': '#F57C00',
-            'Tier 4 - Low': '#757575'
+            'Tier 4 - Low': '#D32F2F'
         },
         hover_data=['COUNTY', 'POPULATION', 'MEDIAN_INCOME'],
         labels={'OPPORTUNITY_SCORE': 'Opportunity Score', 'NAME': 'Municipality'}
@@ -635,7 +635,7 @@ def main():
                         <span style="color: #1a1a1a; font-size: 12px;">Tier 1 - Prime (70+)</span>
                     </div>
                     <div style="display: flex; align-items: center;">
-                        <span style="background: #1976D2; width: 16px; height: 16px; display: inline-block; margin-right: 6px; border-radius: 3px;"></span>
+                        <span style="background: #FFD600; width: 16px; height: 16px; display: inline-block; margin-right: 6px; border-radius: 3px;"></span>
                         <span style="color: #1a1a1a; font-size: 12px;">Tier 2 - Strong (50-69)</span>
                     </div>
                     <div style="display: flex; align-items: center;">
@@ -643,7 +643,7 @@ def main():
                         <span style="color: #1a1a1a; font-size: 12px;">Tier 3 - Moderate (30-49)</span>
                     </div>
                     <div style="display: flex; align-items: center;">
-                        <span style="background: #757575; width: 16px; height: 16px; display: inline-block; margin-right: 6px; border-radius: 3px;"></span>
+                        <span style="background: #D32F2F; width: 16px; height: 16px; display: inline-block; margin-right: 6px; border-radius: 3px;"></span>
                         <span style="color: #1a1a1a; font-size: 12px;">Tier 4 - Low (&lt;30)</span>
                     </div>
                 </div>
@@ -707,7 +707,7 @@ def main():
             tier2_count = len(municipalities[municipalities['MARKET_TIER'] == 'Tier 2 - Strong'])
             tier2_pop = municipalities[municipalities['MARKET_TIER'] == 'Tier 2 - Strong']['POPULATION'].sum()
             st.markdown(f"""
-            <div style="background: linear-gradient(135deg, #1976D2 0%, #42A5F5 100%); padding: 20px; border-radius: 10px; color: white; text-align: center;">
+            <div style="background: linear-gradient(135deg, #FFD600 0%, #FFEB3B 100%); padding: 20px; border-radius: 10px; color: #333; text-align: center;">
                 <h2 style="margin: 0; font-size: 2.5rem;">{tier2_count}</h2>
                 <p style="margin: 5px 0 0 0;">Tier 2 - Strong Markets</p>
                 <p style="margin: 0; font-size: 0.9rem; opacity: 0.9;">{tier2_pop:,.0f} residents</p>
@@ -729,7 +729,7 @@ def main():
             tier4_count = len(municipalities[municipalities['MARKET_TIER'] == 'Tier 4 - Low'])
             tier4_pop = municipalities[municipalities['MARKET_TIER'] == 'Tier 4 - Low']['POPULATION'].sum()
             st.markdown(f"""
-            <div style="background: linear-gradient(135deg, #757575 0%, #9E9E9E 100%); padding: 20px; border-radius: 10px; color: white; text-align: center;">
+            <div style="background: linear-gradient(135deg, #D32F2F 0%, #EF5350 100%); padding: 20px; border-radius: 10px; color: white; text-align: center;">
                 <h2 style="margin: 0; font-size: 2.5rem;">{tier4_count}</h2>
                 <p style="margin: 5px 0 0 0;">Tier 4 - Low Markets</p>
                 <p style="margin: 0; font-size: 0.9rem; opacity: 0.9;">{tier4_pop:,.0f} residents</p>
