@@ -637,7 +637,7 @@ def main():
             )
 
             if deck:
-                st.pydeck_chart(deck, height=600, use_container_width=True)
+                st.pydeck_chart(deck, height=600, width='stretch')
 
                 # Legend below map
                 st.markdown("""
@@ -756,18 +756,18 @@ def main():
         with col1:
             st.markdown("### Market Tier Distribution")
             fig = create_tier_distribution_chart(municipalities)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
         
         with col2:
             st.markdown("### County Market Size Comparison")
             fig = create_county_comparison_chart(municipalities)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
         
         # Charts row 2
         st.markdown("### Population vs Opportunity Score")
         st.markdown("*Bubble size represents Market Size. Hover for details.*")
         fig = create_scatter_plot(municipalities)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     
     # -------------------------------------------------------------------
     # TAB 3: Data Explorer
@@ -807,7 +807,7 @@ def main():
         
         st.dataframe(
             display_df,
-            use_container_width=True,
+            width='stretch',
             height=600,
             hide_index=True
         )
@@ -832,7 +832,7 @@ def main():
         with col1:
             n_top = st.slider("Number of top opportunities to show:", 10, 30, 20)
             fig = create_top_opportunities_chart(municipalities, n=n_top)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
         
         with col2:
             st.markdown("### Key Insights")
