@@ -418,7 +418,7 @@ def create_3d_map(municipalities_gdf, selected_counties, selected_tiers, selecte
                 'color': '#333'
             }
         },
-        map_style='mapbox://styles/mapbox/light-v10'
+        map_style='https://basemaps.cartocdn.com/gl/positron-gl-style/style.json'
     )
 
     return deck, filtered
