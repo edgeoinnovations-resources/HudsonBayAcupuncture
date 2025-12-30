@@ -12,6 +12,7 @@ from folium import plugins
 from streamlit_folium import st_folium
 import plotly.express as px
 import plotly.graph_objects as go
+import pydeck as pdk
 import json
 from pathlib import Path
 import base64
@@ -305,8 +306,122 @@ def create_interactive_map(municipalities_gdf, counties_gdf, selected_counties, 
     </div>
     """
     m.get_root().html.add_child(folium.Element(legend_html))
-    
+
     return m, filtered
+
+def create_3d_map(municipalities_gdf, selected_counties, selected_tiers, selected_types):
+    """Create a 3D PyDeck map with extruded polygons based on Opportunity Score."""
+
+    # Filter data
+    filtered = municipalities_gdf.copy()
+
+    if selected_counties:
+        filtered = filtered[filtered['COUNTY'].isin(selected_counties)]
+    if selected_tiers:
+        filtered = filtered[filtered['MARKET_TIER'].isin(selected_tiers)]
+    if selected_types:
+        filtered = filtered[filtered['TYPE'].str.lower().isin([t.lower() for t in selected_types])]
+
+    if len(filtered) == 0:
+        return None, filtered
+
+    # Ensure we're in WGS84 (EPSG:4326)
+    if filtered.crs and filtered.crs.to_epsg() != 4326:
+        filtered = filtered.to_crs(epsg=4326)
+
+    # Prepare data for PyDeck - extract polygon coordinates
+    map_data = []
+    for idx, row in filtered.iterrows():
+        geom = row.geometry
+
+        # Handle both Polygon and MultiPolygon
+        if geom.geom_type == 'Polygon':
+            coords = [list(geom.exterior.coords)]
+        elif geom.geom_type == 'MultiPolygon':
+            # Take the largest polygon
+            largest = max(geom.geoms, key=lambda p: p.area)
+            coords = [list(largest.exterior.coords)]
+        else:
+            continue
+
+        # Get color based on tier
+        tier_colors = {
+            "Tier 1 - Prime": [46, 125, 50, 200],      # Green
+            "Tier 2 - Strong": [25, 118, 210, 200],    # Blue
+            "Tier 3 - Moderate": [245, 124, 0, 200],   # Orange
+            "Tier 4 - Low": [117, 117, 117, 200]       # Gray
+        }
+        color = tier_colors.get(row['MARKET_TIER'], [117, 117, 117, 200])
+
+        # Extrusion height based on opportunity score (scaled for visibility)
+        elevation = row['OPPORTUNITY_SCORE'] * 500  # Scale factor for visibility
+
+        map_data.append({
+            'polygon': coords,
+            'name': row['NAME'],
+            'county': row['COUNTY'],
+            'population': int(row['POPULATION']),
+            'median_income': int(row['MEDIAN_INCOME']),
+            'opportunity_score': round(row['OPPORTUNITY_SCORE'], 1),
+            'market_tier': row['MARKET_TIER'],
+            'elevation': elevation,
+            'color': color
+        })
+
+    # Calculate center
+    bounds = filtered.total_bounds  # [minx, miny, maxx, maxy]
+    center_lon = (bounds[0] + bounds[2]) / 2
+    center_lat = (bounds[1] + bounds[3]) / 2
+
+    # Create the polygon layer with extrusion
+    polygon_layer = pdk.Layer(
+        'PolygonLayer',
+        data=map_data,
+        get_polygon='polygon',
+        get_elevation='elevation',
+        get_fill_color='color',
+        get_line_color=[50, 50, 50, 255],
+        line_width_min_pixels=1,
+        extruded=True,
+        wireframe=True,
+        pickable=True,
+        auto_highlight=True,
+        highlight_color=[255, 215, 0, 200],  # Gold highlight on hover
+    )
+
+    # Initial view state with pitch for 3D effect
+    view_state = pdk.ViewState(
+        latitude=center_lat,
+        longitude=center_lon,
+        zoom=8,
+        pitch=45,  # Tilt angle for 3D view
+        bearing=0
+    )
+
+    # Create the deck
+    deck = pdk.Deck(
+        layers=[polygon_layer],
+        initial_view_state=view_state,
+        tooltip={
+            'html': '''
+                <div style="font-family: Arial; padding: 10px; background: white; border-radius: 8px; color: #333;">
+                    <b style="font-size: 16px; color: #1E3A5F;">{name}</b><br/>
+                    <b>County:</b> {county}<br/>
+                    <b>Population:</b> {population:,}<br/>
+                    <b>Median Income:</b> ${median_income:,}<br/>
+                    <b>Opportunity Score:</b> <span style="font-weight: bold; font-size: 14px;">{opportunity_score}</span><br/>
+                    <b>Market Tier:</b> {market_tier}
+                </div>
+            ''',
+            'style': {
+                'backgroundColor': 'white',
+                'color': '#333'
+            }
+        },
+        map_style='mapbox://styles/mapbox/light-v10'
+    )
+
+    return deck, filtered
 
 # -------------------------------------------------------------------
 # Chart Functions
@@ -469,13 +584,17 @@ def main():
         st.markdown("---")
         
         # Map settings
-        st.markdown("## 🗺️ Map Settings")
-        color_by = st.radio(
-            "Color by:",
-            options=["Market Tier", "Opportunity Score"],
-            index=0
-        )
-        
+        st.markdown("## 🗺️ 3D Map Controls")
+        st.markdown("""
+        - **Drag** to rotate view
+        - **Scroll** to zoom in/out
+        - **Shift+drag** to pan
+        - **Hover** for details
+
+        *Height = Opportunity Score*
+        *Color = Market Tier*
+        """)
+
         st.markdown("---")
         
         # Quick stats
@@ -498,15 +617,42 @@ def main():
     # -------------------------------------------------------------------
     with tab1:
         col1, col2 = st.columns([3, 1])
-        
+
         with col1:
-            # Create and display map
-            m, filtered_data = create_interactive_map(
-                municipalities, counties, 
-                selected_counties, selected_tiers, selected_types, color_by
+            # Create and display 3D map
+            deck, filtered_data = create_3d_map(
+                municipalities, selected_counties, selected_tiers, selected_types
             )
-            
-            st_folium(m, width=None, height=600, returned_objects=[])
+
+            if deck:
+                st.pydeck_chart(deck, height=600, use_container_width=True)
+
+                # Legend below map
+                st.markdown("""
+                <div style="display: flex; gap: 20px; justify-content: center; padding: 10px; background: #f8f9fa; border-radius: 8px; margin-top: 10px;">
+                    <div style="display: flex; align-items: center;">
+                        <span style="background: #2E7D32; width: 16px; height: 16px; display: inline-block; margin-right: 6px; border-radius: 3px;"></span>
+                        <span style="color: #1a1a1a; font-size: 12px;">Tier 1 - Prime (70+)</span>
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <span style="background: #1976D2; width: 16px; height: 16px; display: inline-block; margin-right: 6px; border-radius: 3px;"></span>
+                        <span style="color: #1a1a1a; font-size: 12px;">Tier 2 - Strong (50-69)</span>
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <span style="background: #F57C00; width: 16px; height: 16px; display: inline-block; margin-right: 6px; border-radius: 3px;"></span>
+                        <span style="color: #1a1a1a; font-size: 12px;">Tier 3 - Moderate (30-49)</span>
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <span style="background: #757575; width: 16px; height: 16px; display: inline-block; margin-right: 6px; border-radius: 3px;"></span>
+                        <span style="color: #1a1a1a; font-size: 12px;">Tier 4 - Low (&lt;30)</span>
+                    </div>
+                </div>
+                <p style="text-align: center; color: #666; font-size: 11px; margin-top: 5px;">
+                    Height = Opportunity Score • Drag to rotate • Scroll to zoom • Shift+drag to pan
+                </p>
+                """, unsafe_allow_html=True)
+            else:
+                st.warning("No municipalities match your filter criteria.")
         
         with col2:
             st.markdown("### 📍 Filtered Results")
