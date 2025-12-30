@@ -53,9 +53,16 @@ st.markdown("""
         gap: 8px;
     }
     .stTabs [data-baseweb="tab"] {
-        background-color: #f0f2f6;
+        background-color: #f0f2f6 !important;
         border-radius: 4px 4px 0 0;
         padding: 10px 20px;
+        color: #1a1a1a !important;
+    }
+    .stTabs [data-baseweb="tab"]:hover {
+        color: #1a1a1a !important;
+    }
+    .stTabs [aria-selected="true"] {
+        color: #1a1a1a !important;
     }
 </style>
 """, unsafe_allow_html=True)
